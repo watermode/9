@@ -1,80 +1,164 @@
+
 #include <iostream>
 #include <vector>
-#include <cmath>
-#include <climits>
-#include <locale>
+#include <string>
+#include <fstream>
+#include <algorithm>
 
 using namespace std;
 
+struct Contact {
+    string name;
+    string phone;
+    string email;
+};
+
+vector<Contact> contacts;
+
+void showMenu() {
+    cout << "\n==========================" << endl;
+    cout << "  КОНТАКТНИЙ ЗАПИСНИК" << endl;
+    cout << "==========================" << endl;
+    cout << "1. Додати контакт" << endl;
+    cout << "2. Переглянути всі контакти" << endl;
+    cout << "3. Редагувати контакт" << endl;
+    cout << "4. Видалити контакт" << endl;
+    cout << "5. Зберегти у файл" << endl;
+    cout << "6. Завантажити з файлу" << endl;
+    cout << "7. Відсортувати за іменем (А-Я)" << endl;
+    cout << "8. Вийти" << endl;
+    cout << "Оберіть дію: ";
+}
+
+void addContact() {
+    Contact c;
+    cout << "Введіть ім'я: ";
+    getline(cin >> ws, c.name);
+    cout << "Введіть номер телефону: ";
+    getline(cin, c.phone);
+    cout << "Введіть email: ";
+    getline(cin, c.email);
+    contacts.push_back(c);
+    cout << "Контакт додано успішно!\n";
+}
+
+void viewContacts() {
+    if (contacts.empty()) {
+        cout << "Список контактів порожній.\n";
+        return;
+    }
+    for (size_t i = 0; i < contacts.size(); ++i) {
+        cout << "\nКонтакт #" << i + 1 << endl;
+        cout << "Ім'я: " << contacts[i].name << endl;
+        cout << "Телефон: " << contacts[i].phone << endl;
+        cout << "Email: " << contacts[i].email << endl;
+    }
+}
+
+void editContact() {
+    int index;
+    viewContacts();
+    cout << "\nВведіть номер контакту для редагування: ";
+    cin >> index;
+    if (index < 1 || index >(int)contacts.size()) {
+        cout << "Невірний номер контакту.\n";
+        return;
+    }
+    Contact& c = contacts[index - 1];
+    cout << "Нове ім'я (залиште порожнім, щоб не змінювати): ";
+    string newName;
+    getline(cin >> ws, newName);
+    if (!newName.empty()) c.name = newName;
+
+    cout << "Новий телефон (залиште порожнім, щоб не змінювати): ";
+    string newPhone;
+    getline(cin, newPhone);
+    if (!newPhone.empty()) c.phone = newPhone;
+
+    cout << "Новий email (залиште порожнім, щоб не змінювати): ";
+    string newEmail;
+    getline(cin, newEmail);
+    if (!newEmail.empty()) c.email = newEmail;
+
+    cout << "Контакт оновлено!\n";
+}
+
+void deleteContact() {
+    int index;
+    viewContacts();
+    cout << "\nВведіть номер контакту для видалення: ";
+    cin >> index;
+    if (index < 1 || index >(int)contacts.size()) {
+        cout << "Невірний номер контакту.\n";
+        return;
+    }
+    contacts.erase(contacts.begin() + index - 1);
+    cout << "Контакт видалено.\n";
+}
+
+void saveToFile() {
+    ofstream file("contacts.txt");
+    if (!file.is_open()) {
+        cout << "Не вдалося відкрити файл для запису.\n";
+        return;
+    }
+    for (const auto& c : contacts) {
+        file << c.name << ";" << c.phone << ";" << c.email << "\n";
+    }
+    file.close();
+    cout << "Контакти збережено у файл.\n";
+}
+
+void loadFromFile() {
+    contacts.clear();
+    ifstream file("contacts.txt");
+    if (!file.is_open()) {
+        cout << "Не вдалося відкрити файл для зчитування.\n";
+        return;
+    }
+
+    string line;
+    while (getline(file, line)) {
+        cout << "[DEBUG] Зчитано рядок: " << line << endl;
+        size_t pos1 = line.find(';');
+        size_t pos2 = line.find(';', pos1 + 1);
+        if (pos1 == string::npos || pos2 == string::npos) continue;
+
+        Contact c;
+        c.name = line.substr(0, pos1);
+        c.phone = line.substr(pos1 + 1, pos2 - pos1 - 1);
+        c.email = line.substr(pos2 + 1);
+        contacts.push_back(c);
+    }
+    file.close();
+    cout << "Контакти завантажено з файлу.\n";
+}
+
+void sortByName() {
+    sort(contacts.begin(), contacts.end(), [](const Contact& a, const Contact& b) {
+        return a.name < b.name;
+        });
+    cout << "Список контактів відсортовано за іменем (А-Я).\n";
+}
+
 int main() {
-    setlocale(LC_ALL, "Russian");
-
-    vector<int> arr = { 4, 7, -8, -2, -3, 2, 5, 0, 3 };
-
-    double sum = 0;
-    for (int num : arr) {
-        sum += num;
-    }
-    double avg = sum / arr.size();
-
-    int closestIndex = 0;
-    double minDiff = abs(arr[0] - avg);
-    for (size_t i = 1; i < arr.size(); ++i) {
-        double diff = abs(arr[i] - avg);
-        if (diff < minDiff) {
-            minDiff = diff;
-            closestIndex = i;
+    setlocale(0, "");
+    int choice;
+    do {
+        showMenu();
+        cin >> choice;
+        cin.ignore();
+        switch (choice) {
+        case 1: addContact(); break;
+        case 2: viewContacts(); break;
+        case 3: editContact(); break;
+        case 4: deleteContact(); break;
+        case 5: saveToFile(); break;
+        case 6: loadFromFile(); break;
+        case 7: sortByName(); break;
+        case 8: cout << "До побачення!\n"; break;
+        default: cout << "Невірний вибір. Спробуйте ще.\n";
         }
-    }
-
-    int firstNegative = -1;
-    int secondPositive = -1;
-    int positiveCount = 0;
-    for (size_t i = 0; i < arr.size(); ++i) {
-        if (arr[i] < 0 && firstNegative == -1) {
-            firstNegative = i;
-        }
-        else if (arr[i] > 0) {
-            positiveCount++;
-            if (positiveCount == 2) {
-                secondPositive = i;
-                break;
-            }
-        }
-    }
-
-    int diffSum = 0;
-    if (firstNegative != -1 && secondPositive != -1 && secondPositive > firstNegative + 1) {
-        for (int i = firstNegative + 1; i < secondPositive; ++i) {
-            diffSum += arr[i];
-        }
-    }
-    else {
-        cout << "Неможливо обчислити різницю — недостатньо елементів.\n";
-    }
-
-    vector<int> evenPos, oddPos;
-    for (size_t i = 0; i < arr.size(); ++i) {
-        if (i % 2 == 0)
-            evenPos.push_back(arr[i]);
-        else
-            oddPos.push_back(arr[i]);
-    }
-
-    vector<int> transformed = evenPos;
-    transformed.insert(transformed.end(), oddPos.begin(), oddPos.end());
-
-    cout << "Середнє арифметичне: " << avg << endl;
-    cout << "Номер елемента, найближчого до середнього: " << closestIndex << " (значення: " << arr[closestIndex] << ")\n";
-
-    if (secondPositive > firstNegative + 1)
-        cout << "Сума елементів між першим від'ємним і другим додатним: " << diffSum << endl;
-
-    cout << "Перетворений масив: ";
-    for (int val : transformed) {
-        cout << val << " ";
-    }
-    cout << endl;
-
+    } while (choice != 8);
     return 0;
 }
