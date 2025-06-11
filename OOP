@@ -1,0 +1,80 @@
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <climits>
+#include <locale>
+
+using namespace std;
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+
+    vector<int> arr = { 4, 7, -8, -2, -3, 2, 5, 0, 3 };
+
+    double sum = 0;
+    for (int num : arr) {
+        sum += num;
+    }
+    double avg = sum / arr.size();
+
+    int closestIndex = 0;
+    double minDiff = abs(arr[0] - avg);
+    for (size_t i = 1; i < arr.size(); ++i) {
+        double diff = abs(arr[i] - avg);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closestIndex = i;
+        }
+    }
+
+    int firstNegative = -1;
+    int secondPositive = -1;
+    int positiveCount = 0;
+    for (size_t i = 0; i < arr.size(); ++i) {
+        if (arr[i] < 0 && firstNegative == -1) {
+            firstNegative = i;
+        }
+        else if (arr[i] > 0) {
+            positiveCount++;
+            if (positiveCount == 2) {
+                secondPositive = i;
+                break;
+            }
+        }
+    }
+
+    int diffSum = 0;
+    if (firstNegative != -1 && secondPositive != -1 && secondPositive > firstNegative + 1) {
+        for (int i = firstNegative + 1; i < secondPositive; ++i) {
+            diffSum += arr[i];
+        }
+    }
+    else {
+        cout << "Неможливо обчислити різницю — недостатньо елементів.\n";
+    }
+
+    vector<int> evenPos, oddPos;
+    for (size_t i = 0; i < arr.size(); ++i) {
+        if (i % 2 == 0)
+            evenPos.push_back(arr[i]);
+        else
+            oddPos.push_back(arr[i]);
+    }
+
+    vector<int> transformed = evenPos;
+    transformed.insert(transformed.end(), oddPos.begin(), oddPos.end());
+
+    cout << "Середнє арифметичне: " << avg << endl;
+    cout << "Номер елемента, найближчого до середнього: " << closestIndex << " (значення: " << arr[closestIndex] << ")\n";
+
+    if (secondPositive > firstNegative + 1)
+        cout << "Сума елементів між першим від'ємним і другим додатним: " << diffSum << endl;
+
+    cout << "Перетворений масив: ";
+    for (int val : transformed) {
+        cout << val << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
